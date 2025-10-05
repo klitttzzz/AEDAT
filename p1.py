@@ -71,14 +71,72 @@ def merge(left_lst, right_lst, orden):
 
     return result
 
+def heap_heapify(lst, i):
+    n = len(lst)
+    maximum = i
+    l = 2*i+1
+    r = 2*i+2
+
+    if l < n and lst[i] < lst[l]:
+        maximum = l
+    if r < n and lst[r] > lst[maximum]:
+        maximum = r
+    
+    if  maximum != i:
+        lst[i], lst[maximum] = lst[maximum], lst[i]
+        return heap_heapify(lst, maximum)
+    return lst
+
+def heap_create(lst):
+    for j in range((len(lst)-1)//2, -1, -1):
+        heap_heapify(lst, j) 
+
+    return lst
+
+def heap_insert(h, key):
+    h.append(key)  # Añadir al final
+    for i in range((len(h) - 1) // 2, -1, -1):
+        heap_heapify(h, i)
+    return h
+
+
+def heap_extract(h):
+    if len(h) == 0:
+        raise IndexError("heap is empty")
+
+    e = h[0]
+
+    h[0] = h[-1]
+
+    h.pop()
+
+    heap_heapify(h, 0)
+
+    return h, e
+    
 
 lst = [1,2, 3, 2,1]
 lstaux = search_all(lst, 2)
 naux = majority_search(lst)
 bubble = bubble_sort(lst, True)
 lst = [1,2, 3, 2,1]
-merge = merge_sort(lst, False)
+merge_ = merge_sort(lst, True)
 print(lstaux)
 print(naux)
 print(bubble)
-print(merge)
+print(merge_)
+
+
+lst = [20,9,10,5,6,4,15]
+heap_heapify(lst, 0)
+print(lst)
+lst = [20,9,10,5,6,4,15]
+l = heap_create(lst)
+print(l)
+
+heap_insert(l,21)
+print(l)
+l, e = heap_extract(l)
+print(l)
+print("Elemento extraído:", e)
+

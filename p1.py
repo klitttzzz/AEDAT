@@ -1,3 +1,6 @@
+import statistics
+import time
+
 def search_all(lst, vy):
     lstaux = list()
     for i in range(len(lst)):
@@ -122,6 +125,17 @@ def pq_insert(h, key):
     
 def pq_extract(h):
     return heap_extract(h)
+
+def time_measure(f, data_prep, NLst, Nrep=1000, Nstat=100):
+    i = 0
+    for n in NLst:
+        for j in Nrep:
+            data = data_prep(n)
+            for k in Nrep:
+                t1 = time.
+                time += f*data
+        lst[i] = (statistics.mean(time, Nrep), statistics.variance(time, Nrep))
+        i += 1
 
 lst = [1,2, 3, 2,1]
 lstaux = search_all(lst, 2)

@@ -93,6 +93,28 @@ def heap_create(lst):
 
     return lst
 
+def heap_insert(h, key):
+    h.append(key)  # Añadir al final
+    for i in range((len(h) - 1) // 2, -1, -1):
+        heap_heapify(h, i)
+    return h
+
+
+def heap_extract(h):
+    if len(h) == 0:
+        raise IndexError("heap is empty")
+
+    e = h[0]
+
+    h[0] = h[-1]
+
+    h.pop()
+
+    heap_heapify(h, 0)
+
+    return h, e
+    
+
 lst = [1,2, 3, 2,1]
 lstaux = search_all(lst, 2)
 naux = majority_search(lst)
@@ -112,5 +134,9 @@ lst = [20,9,10,5,6,4,15]
 l = heap_create(lst)
 print(l)
 
-
+heap_insert(l,21)
+print(l)
+l, e = heap_extract(l)
+print(l)
+print("Elemento extraído:", e)
 

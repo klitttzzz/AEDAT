@@ -113,7 +113,15 @@ def heap_extract(h):
     heap_heapify(h, 0)
 
     return h, e
+
+def pq_ini():
+    return []
+
+def pq_insert(h, key):
+    return heap_insert(h, key)
     
+def pq_extract(h):
+    return heap_extract(h)
 
 lst = [1,2, 3, 2,1]
 lstaux = search_all(lst, 2)
@@ -139,4 +147,13 @@ print(l)
 l, e = heap_extract(l)
 print(l)
 print("Elemento extraído:", e)
+
+h = pq_ini()
+print(h)
+h = [20,9,10,5,6,4,15]
+h = pq_insert(lst,8)
+print(h)
+h, e = pq_extract(h)
+print(h)
+print(e)
 

@@ -1,5 +1,4 @@
-import statistics
-import time
+import statistics, time, random
 
 def search_all(lst, vy):
     lstaux = list()
@@ -127,15 +126,23 @@ def pq_extract(h):
     return heap_extract(h)
 
 def time_measure(f, data_prep, NLst, Nrep=1000, Nstat=100):
-    i = 0
+    import statistics, time
+    lst = []
     for n in NLst:
-        for j in Nrep:
+        tiempos = []
+        for _ in range(Nstat):
             data = data_prep(n)
-            for k in Nrep:
-                t1 = time.
-                time += f*data
-        lst[i] = (statistics.mean(time, Nrep), statistics.variance(time, Nrep))
-        i += 1
+            for _ in range(Nrep):
+                t1 = time.time()
+                f(*data)
+                t2 = time.time()
+                tiempos.append(t2 - t1)
+        lst.append((statistics.mean(tiempos), statistics.variance(tiempos)))
+    return lst
+
+def data_prep(n):
+    lst = [random.randint(0, n) for _ in range(n)]
+    return (lst, True)
 
 lst = [1,2, 3, 2,1]
 lstaux = search_all(lst, 2)
@@ -171,3 +178,5 @@ h, e = pq_extract(h)
 print(h)
 print(e)
 
+lst = time_measure(bubble_sort, data_prep, [100, 200, 300, 400], Nrep=1000, Nstat=100)
+print(lst)

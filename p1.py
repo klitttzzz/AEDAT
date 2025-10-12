@@ -182,6 +182,10 @@ def data_prep(n):
     lst = [random.randint(0, n) for _ in range(n)]
     return (lst, True)
 
+def data_prep_majority_func(n):
+    lst = [random.randint(0, n) for _ in range(n)]
+    return (lst, )
+
 lst = [1,2, 3, 2,1]
 lstaux = search_all(lst, 2)
 naux = majority_search(lst)
@@ -217,4 +221,5 @@ print(h)
 print(e)
 
 lst = time_measure(bubble_sort, data_prep, [100, 500, 1000, 2000], Nrep=1000, Nstat=100)
+
 print(lst)

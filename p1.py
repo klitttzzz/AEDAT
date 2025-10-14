@@ -10,7 +10,7 @@ def search_all(lst, vy):
             lstaux.append(i)
     return lstaux
 
-def majority_search(lst):
+def majority_element(lst):
     """
     Receives a list of integers and returns the value that appears more than half the times (or None if it does not exist).
     The algorithm is O(n) and uses only O(1) additional space.
@@ -185,4 +185,5 @@ def data_prep(n):
 def data_prep_majority_func(n):
     lst = [random.randint(0, n) for _ in range(n)]
     return (lst, )
+
 

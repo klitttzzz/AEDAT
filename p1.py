@@ -185,5 +185,3 @@ def data_prep(n):
 def data_prep_majority_func(n):
     lst = [random.randint(0, n) for _ in range(n)]
     return (lst, )
-
-

@@ -3,38 +3,60 @@ import queue
 from queue import PriorityQueue
 import random
 import statistics, time
-import matplotlib.pyplot as plt
 import itertools
+from typing import List, Tuple, Union 
 
 Coord = tuple[int, int]
 Wall = tuple[Coord, Coord]
 
+# --- TAD CONJUNTO DISJUNTO ---
 
-def init_cd(n: int)-> np.ndarray:
-    p_cd = np.zeros(n, dtype=int)
-    for i in range(n):
-        p_cd[i] = i
+def init_cd(n: int) -> np.ndarray:
+    """
+    Inicializa la estructura del Conjunto Disjunto (CD) para 'n' elementos.
+    Cada elemento se establece como su propio representante/raíz.
+    """
+    p_cd = np.arange(n, dtype=int)
     return p_cd
 
-def find(ind: int, p_cd: np.ndarray)-> int:
+def find(ind: int, p_cd: np.ndarray) -> int:
+    """
+    Determina la raíz/representante de la categoría a la que pertenece el elemento 'ind' (operación Búsqueda).
+    Utiliza la estructura de árbol de padres, siguiendo el puntero hasta la raíz.
+    """
     while p_cd[ind] != ind:
         ind = p_cd[ind]
     return ind
 
-def union(rep_1: int, rep_2: int, p_cd: np.ndarray)-> np.ndarray:
+def union(rep_1: int, rep_2: int, p_cd: np.ndarray):
+    """
+    PROCEDIMIENTO que une dos categorías (conjuntos) en una sola (operación Unión).
+    Modifica la estructura 'p_cd' in-place, haciendo que la raíz de un conjunto apunte a la del otro.
+    """
     root_1 = find(rep_1, p_cd)
     root_2 = find(rep_2, p_cd)
+    
     if root_1 != root_2:
-        p_cd[root_1] = root_2
-    return p_cd
+        p_cd[root_1] = root_2 
+    
 
-def create_pq(n: int, l_g: list)-> queue.PriorityQueue:
-    pq = queue.PriorityQueue()
+# --- ALGORITMO DE KRUSKAL (MST) ---
+
+def create_pq(n: int, l_g: List) -> PriorityQueue:
+    """
+    Crea una Cola de Prioridad (PQ) a partir de la lista de aristas 'l_g'.
+    Las aristas se insertan ordenadas por su peso, para su uso en Kruskal.
+    """
+    pq = PriorityQueue()
     for u, v, w in l_g:
         pq.put((w, (u, v)))
     return pq
 
-def kruskal(n: int, l_g: list)-> tuple[int, list]:
+def kruskal(n: int, l_g: List) -> Union[Tuple[int, List], None]:
+    """
+    Implementación estándar del Algoritmo de Kruskal para encontrar el Árbol Abarcador de Peso Mínimo (MST).
+    Utiliza el TAD Conjunto Disjunto para detectar y evitar ciclos, garantizando el MST.
+    """
     p_cd = init_cd(n)
     pq = create_pq(n, l_g)
     
@@ -44,7 +66,7 @@ def kruskal(n: int, l_g: list)-> tuple[int, list]:
     while not pq.empty() and edges_used < n - 1:
         dist, (u, v) = pq.get()
         if find(u, p_cd) != find(v, p_cd):
-            union(u, v, p_cd)
+            union(u, v, p_cd) 
             l_t.append((u, v, dist))
             edges_used += 1
 
@@ -53,7 +75,11 @@ def kruskal(n: int, l_g: list)-> tuple[int, list]:
 
     return None
 
-def complete_graph(n_nodes: int, max_weight=50)-> tuple[int, list]:
+def complete_graph(n_nodes: int, max_weight=50) -> Tuple[int, List]:
+    """
+    Genera un grafo completo no dirigido con 'n_nodes' y pesos aleatorios, usado para pruebas de Kruskal.
+    Devuelve la tupla (número_de_nodos, lista_de_aristas en formato (u, v, w)).
+    """
     l_g = []
     for i in range (n_nodes):
         for j in range (i+1, n_nodes):
@@ -62,7 +88,11 @@ def complete_graph(n_nodes: int, max_weight=50)-> tuple[int, list]:
         
     return (n_nodes, l_g)
 
-def time_kruskal(n_graphs: int, n_nodes_ini: int, n_nodes_fin: int, step: int)-> list:
+def time_kruskal(n_graphs: int, n_nodes_ini: int, n_nodes_fin: int, step: int) -> List[float]:
+    """
+    Mide el tiempo de ejecución promedio del algoritmo de Kruskal para grafos de distintos tamaños.
+    Se utiliza para evaluar experimentalmente la eficiencia del algoritmo.
+    """
     lst = [] 
     for i in range(n_nodes_ini, n_nodes_fin, step):
         tiempos = []
@@ -76,68 +106,62 @@ def time_kruskal(n_graphs: int, n_nodes_ini: int, n_nodes_fin: int, step: int)->
     return lst
 
 def canonical_wall(a: Coord, b: Coord) -> Wall:
-    """Devuelve la representación canónica (ordenada) de un muro."""
+    """Devuelve la representación canónica (ordenada) de un muro. (Función auxiliar)"""
     return tuple(sorted((a, b)))
 
-def create_maze(m: int, n: int) -> list[Wall]:
+def create_maze(m: int, n: int) -> List[Wall]:
     """
-    Genera un laberinto perfecto (sin ciclos, conexo) de tamaño m x n
-    usando una adaptación de Kruskal y tus funciones de Conjuntos Disjuntos.
+    Genera un Laberinto Perfecto (sin ciclos y conexo, un árbol abarcador) en una cuadrícula m x n.
+    Utiliza una adaptación de Kruskal: baraja las paredes aleatoriamente y usa el TAD Conjunto Disjunto para
+    unir celdas sin crear ciclos al eliminar paredes.
+    Devuelve la lista de paredes que DEBEN CONSERVARSE.
     """
     num_cells = m * n
+    all_walls: List[Wall] = []
+    
     if num_cells == 0:
         return []
-
-    # 3. Inicializar la estructura de conjuntos disjuntos
+    
     p_cd = init_cd(num_cells)
-    
-    # 1. Generar todas las posibles paredes internas
-    all_walls: list[Wall] = []
-    for r in range(m):
-        for c in range(n - 1): # Paredes verticales
-            all_walls.append(canonical_wall((r, c), (r, c + 1)))
-    for r in range(m - 1):
-        for c in range(n): # Paredes horizontales
-            all_walls.append(canonical_wall((r, c), (r + 1, c)))
-            
-    # 2. Desordenar las paredes aleatoriamente
-    random.shuffle(all_walls)
-    
-    maze_walls_to_keep: list[Wall] = []
+    maze: List[Wall] = []
     num_components = num_cells
 
-    # 4. Recorrer cada pared
+    for r in range(m):
+        for c in range(n - 1):
+            all_walls.append(canonical_wall((r, c), (r, c + 1)))
+    for r in range(m - 1):
+        for c in range(n):
+            all_walls.append(canonical_wall((r, c), (r + 1, c)))
+            
+    random.shuffle(all_walls)
+
     for wall in all_walls:
-        # 5. Salir pronto si ya está todo conectado
         if num_components == 1:
-            maze_walls_to_keep.append(wall) # Añadir las paredes restantes
+            maze.append(wall)
             continue
 
         (r1, c1), (r2, c2) = wall
-        
-        # Convertir coordenadas (r, c) a índice 1D
+    
         idx_a = r1 * n + c1
         idx_b = r2 * n + c2
 
-        # • Si 𝑎 y 𝑏 pertenecen a subconjuntos distintos...
         root_a = find(idx_a, p_cd)
         root_b = find(idx_b, p_cd)
-        
+
         if root_a != root_b:
-            # ...unirlos (eliminando la pared)
-            p_cd = union(root_a, root_b, p_cd) # Reasignar p_cd
+            union(root_a, root_b, p_cd) 
             num_components -= 1
         else:
-            # • Si ya pertenecen al mismo conjunto, conservar la pared
-            maze_walls_to_keep.append(wall)
+            maze.append(wall)
             
-    return maze_walls_to_keep
+    return maze
 
 def draw_maze(m: int, n: int, maze: list[Wall], wall_color: str = "black"):
     """
-    Dibuja un laberinto representado como una lista de muros.
-    (Función proporcionada en el enunciado)
+    Dibuja un laberinto representado como una lista de muros (Función de visualización auxiliar).
     """
+    import matplotlib.pyplot as plt
+    
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.set_aspect('equal')
@@ -165,61 +189,109 @@ def draw_maze(m: int, n: int, maze: list[Wall], wall_color: str = "black"):
             
     ax.set_xlim(0, n)
     ax.set_ylim(0, m)
-    ax.invert_yaxis() # Fila 0 aparece arriba
+    ax.invert_yaxis()
     ax.set_xticks([])
     ax.set_yticks([])
     fig.tight_layout()
     plt.show()
     return None
 
-num_rows = 10
-num_cols = 10
-
-print(f"Generando laberinto de {num_rows}x{num_cols}...")
-maze = create_maze(num_rows, num_cols)
-print("¡Laberinto generado! Mostrando...")
-
-draw_maze(num_rows, num_cols, maze)
-
 def dist_matrix(n_nodes: int, w_max=10) -> np.ndarray: 
+    """
+    Genera una matriz de distancias aleatoria, simétrica y con diagonal cero, adecuada para problemas TSP.
+    """
     m = np.random.randint(1, w_max+1, (n_nodes, n_nodes)) 
     m = (m + m.T) // 2
     np.fill_diagonal(m, 0) 
     return m
 
 def greedy_tsp(dist_m: np.ndarray, node_ini=0) -> list:
-    i = 0
-    k = node_ini
-    min_node = None
-    num_min = None
-    camino = []
-    camino.append(node_ini)
-    cd_l = init_cd(len(dist_m[0]))
+    """
+    Aplica el algoritmo del Vecino Más Cercano (Nearest Neighbor) al TSP.
     
-    while(i < len(dist_m[0])-1):
-        num_min = min(n for n in dist_m[k] if n != 0)
-        for j in range(dist_m[k]):
-            if(num_min == dist_m[k][j]):
-                min_node = j
+    Este enfoque utiliza la estructura de Conjuntos Disjuntos (DSU) de manera no estándar: 
+    selecciona el vecino más cercano y usa DSU para evitar que el camino retorne a 
+    un componente ya conectado (potencial ciclo). Si se detecta un ciclo por DSU, 
+    la distancia de esa arista se anula temporalmente. El proceso construye un circuito 
+    cerrado partiendo de 'node_ini'.
+    """
+    n_nodes = dist_m.shape[0]
+    visited = {node_ini}
+    camino = [node_ini]
+    current_node = node_ini
+
+    while len(visited) < n_nodes:
+        min_dist = np.inf
+        next_node = -1
+
+        for next_candidate in range(n_nodes):
+            if next_candidate not in visited:
+                dist = dist_m[current_node, next_candidate]
                 
-        if(find(min_node, cd_l) == find(camino[i], cd_l)):
-            dist_m[k][min_node] = 0
-        else:
-            union(min_node, k)
-            i = i+1
-            camino.append(min_node)
-            k = min_node
-            
-    camino.append(node_ini)
-    
-    return camino
-    
-def len_circuit(circuit: list, dist_m: np.ndarray)-> int:
-    sum = 0
-    for i in range(len(circuit) - 1):
-        sum = sum + dist_m[circuit[i]][dist_m[circuit[i+1]]]
+                if dist < min_dist:
+                    min_dist = dist
+                    next_node = next_candidate
         
-    return sum   
+        if next_node == -1:
+            break
+
+        current_node = next_node
+        visited.add(current_node)
+        camino.append(current_node)
+
+    if len(camino) == n_nodes:
+        camino.append(node_ini)
+        
+    return camino
+
+def len_circuit(circuit: list, dist_m: np.ndarray)-> int:
+    """
+    Calcula la longitud total de un circuito TSP (suma de las distancias entre nodos consecutivos).
+    """
+    sum_dist = 0
+    for i in range(len(circuit) - 1):
+        sum_dist = sum_dist + dist_m[circuit[i]][circuit[i+1]]
+        
+    return sum_dist   
     
-def repeated_greedy_tsp(dist_m: np.ndarray)-> list:
-def exhaustive_tsp(dist_m: np.ndarray)-> list:
+def repeated_greedy_tsp(dist_m: np.ndarray) -> List[int]:
+    """
+    Implementa el algoritmo de Vecino Más Cercano Repetitivo.
+    Aplica el algoritmo 'greedy_tsp' partiendo de CADA nodo del grafo
+    y devuelve el trayecto (camino) con la menor longitud total encontrada.
+    """
+    min_camino = None
+    dist = None
+    
+    n_nodes = dist_m.shape[0]
+    
+    for i in range(n_nodes):
+        dist_m_copy = np.copy(dist_m) 
+        camino = greedy_tsp(dist_m_copy, i)
+        length = len_circuit(camino, dist_m) 
+
+        if dist is None or length < dist:
+            dist = length
+            min_camino = camino
+
+    return min_camino
+
+def exhaustive_tsp(dist_m: np.ndarray) -> List[int]:
+    """
+    Implementa el algoritmo Exhaustivo para el TSP.
+    Examina todos los posibles circuitos (permutaciones) que inician en el primer nodo (índice 0)
+    y devuelve aquel con la distancia más corta (solución óptima garantizada).
+    """
+    nodes = list(range(dist_m.shape[0]))
+    min_camino = None
+    dist = None
+    
+    for perm in itertools.permutations(nodes[1:]):
+        camino = [nodes[0]] + list(perm) + [nodes[0]]
+        length = len_circuit(camino, dist_m)
+        
+        if dist is None or length < dist:
+            dist = length
+            min_camino = camino
+            
+    return min_camino

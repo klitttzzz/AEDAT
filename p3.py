@@ -75,16 +75,4 @@ def unique_path(m:int, n:int)->int:
 
     return c[m-1][n-1]
 
-
-
-print(fib(10)) # Salida esperada: 55
-weights = [2, 3, 4, 5]
-values = [3, 4, 5, 6]
-print(knapsack(5, weights, values)) # Salida esperada: 7
-print(lcs("ABCBDAB", "BDCAB")) # Salida esperada: 4
-coins = [1, 2, 10]
-print(coin_change(coins, 18)) # Salida esperada: 3 (5+5+1)
-print(unique_path(4, 4))    # Salida esperada: 20
-
-
     
